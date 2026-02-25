@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>بيت بيوت — المضيف</title>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function(){
+  const saved = sessionStorage.getItem('hostAuth');
+  if(saved === '120') return;
+  const pass = prompt('🔐 أدخل كلمة سر المضيف:');
+  if(pass !== '120'){ alert('كلمة السر غلط!'); location.href='/'; }
+  else sessionStorage.setItem('hostAuth','120');
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Oswald:wght@700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#111;color:#fff;min-height:100vh;}
+.topbar{background:#1a1a1a;border-bottom:1px solid #222;padding:0.8rem 1.5rem;display:flex;align-items:center;gap:1rem;}
+.topbar a{color:#888;text-decoration:none;font-size:1.2rem;}
+.topbar-brand{font-family:'Oswald',sans-serif;font-size:1.1rem;letter-spacing:0.2em;}
+.main{max-width:700px;margin:0 auto;padding:2rem;}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:1.5rem;margin-bottom:1rem;}
+.label{font-size:0.78rem;letter-spacing:0.25em;color:#666;text-transform:uppercase;margin-bottom:0.5rem;display:block;}
+input,select{width:100%;padding:0.8rem;border:1px solid #333;background:#111;color:#fff;border-radius:2px;font-family:'Tajawal',sans-serif;font-size:0.95rem;outline:none;margin-bottom:1rem;}
+input:focus{border-color:#fff;}
+.btn{width:100%;padding:0.9rem;border:none;border-radius:2px;font-size:1rem;letter-spacing:0.2em;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-create{background:#fff;color:#111;margin-top:0.5rem;}
+.btn-create:hover{background:#e0e0e0;}
+.btn-add{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;margin-bottom:0.5rem;}
+.btn-start{background:#fff;color:#111;width:100%;padding:1rem;font-size:1.1rem;font-weight:900;letter-spacing:0.2em;}
+.btn-next{background:#fff;color:#111;padding:0.8rem 2rem;border:none;border-radius:2px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;font-size:0.95rem;letter-spacing:0.15em;}
+.section-title{font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:0.3em;color:#888;margin-bottom:1rem;text-transform:uppercase;}
+/* Lobby */
+#lobby{display:none;}
+.code-big{font-family:'Oswald',sans-serif;font-size:4rem;font-weight:700;letter-spacing:0.2em;color:#fff;}
+.players-grid{display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;}
+.team-section{margin-bottom:1rem;}
+.team-label{font-size:0.75rem;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:0.5rem;font-weight:700;}
+.player-chip{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:2px;padding:0.4rem 0.8rem;font-size:0.85rem;display:flex;align-items:center;gap:0.4rem;}
+.kick-btn{background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.75rem;}
+/* Game */
+#gamescreen{display:none;}
+.game-layout{display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start;}
+/* Board */
+.board-wrap{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:1rem;}
+.board-title{font-size:0.75rem;letter-spacing:0.3em;color:#666;text-transform:uppercase;margin-bottom:1rem;text-align:center;}
+#dotsBoard{display:block;margin:0 auto;cursor:default;}
+/* Question panel */
+.q-panel{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:1.2rem;}
+.q-counter{font-size:0.7rem;letter-spacing:0.25em;color:#666;text-transform:uppercase;margin-bottom:0.5rem;}
+.q-text{font-size:1rem;font-weight:700;margin-bottom:1rem;min-height:60px;}
+.timer-wrap{display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;}
+.timer-circle{width:44px;height:44px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;}
+.answered-info{font-size:0.78rem;color:#666;letter-spacing:0.15em;margin-bottom:1rem;}
+.ans-bars{display:flex;gap:0.4rem;align-items:flex-end;height:80px;margin-bottom:1rem;}
+.ans-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3rem;}
+.ans-bar{width:100%;border-radius:1px;transition:height 0.4s;min-height:4px;}
+.ans-bar-label{font-size:0.65rem;color:#666;}
+.ans-bar-count{font-size:0.75rem;font-weight:700;color:#fff;}
+/* Score panel */
+.score-panel{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:1rem;margin-top:1rem;}
+.score-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #222;}
+.score-row:last-child{border-bottom:none;}
+.score-team{font-weight:700;font-size:0.9rem;}
+.score-num{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;}
+/* Winner */
+#winnerScreen{display:none;text-align:center;padding:3rem 2rem;}
+.winner-icon{font-size:5rem;margin-bottom:1rem;}
+.winner-text{font-family:'Oswald',sans-serif;font-size:2rem;letter-spacing:0.2em;}
+/* Cheat alert */
+.cheat-alert{display:none;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:3px;padding:0.8rem;margin-bottom:1rem;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/">←</a>
+  <div class="topbar-brand">🔴 بيت بيوت</div>
+</div>
+
+<!-- Setup -->
+<div id="setup" class="main">
+  <div class="card">
+    <div class="section-title">إعداد اللعبة</div>
+    <label class="label">حجم الشبكة</label>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+      <button type="button" id="grid-5" onclick="setGrid(5)" style="flex:1;padding:0.6rem;border:1px solid #fff;background:#fff;color:#111;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">5×5</button>
+      <button type="button" id="grid-6" onclick="setGrid(6)" style="flex:1;padding:0.6rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">6×6</button>
+      <button type="button" id="grid-7" onclick="setGrid(7)" style="flex:1;padding:0.6rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">7×7</button>
+      <button type="button" id="grid-8" onclick="setGrid(8)" style="flex:1;padding:0.6rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">8×8</button>
+    </div>
+    <label class="label">وقت الإجابة</label>
+    <select id="qTime">
+      <option value="15">15 ثانية</option>
+      <option value="20" selected>20 ثانية</option>
+      <option value="30">30 ثانية</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="section-title">الأسئلة</div>
+    <div id="questionsContainer"></div>
+    <div style="display:flex;gap:0.8rem;margin-bottom:0.5rem">
+      <button class="btn btn-add" onclick="addQuestion()" style="flex:1">➕ إضافة سؤال</button>
+      <button class="btn btn-add" onclick="openAIModal()" style="flex:1">🤖 ذكاء اصطناعي</button>
+    </div>
+  </div>
+
+  <button class="btn btn-create" onclick="createDotsRoom()">🚀 إنشاء الغرفة</button>
+</div>
+
+<!-- Lobby -->
+<div id="lobby" class="main">
+  <div class="card" style="text-align:center">
+    <p style="color:#888;font-size:0.8rem;margin-bottom:0.5rem">كود الغرفة</p>
+    <div class="code-big" id="lobbyCode">------</div>
+    <div style="margin:1rem auto;background:#111;display:inline-block;padding:8px;border-radius:8px">
+      <img id="qrImg" width="160" height="160" style="display:block;border-radius:4px"/>
+    </div>
+    <p style="font-size:0.75rem;color:#666">امسح QR للانضمام 📱</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">اللاعبون</div>
+    <div class="team-section">
+      <div class="team-label" id="redLabel" style="color:#ef4444">🔴 الفريق الأحمر (0/2)</div>
+      <div class="players-grid" id="teamRed"></div>
+    </div>
+    <div class="team-section">
+      <div class="team-label" id="blueLabel" style="color:#3b82f6">🔵 الفريق الأزرق (0/2)</div>
+      <div class="players-grid" id="teamBlue"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-start" id="startBtn" disabled onclick="startDotsGame()">▶ ابدأ اللعبة</button>
+</div>
+
+<!-- Game Screen -->
+<div id="gamescreen" class="main">
+  <div class="game-layout">
+    <!-- Board -->
+    <div>
+      <div class="board-wrap">
+        <div class="board-title">الشبكة</div>
+        <canvas id="dotsBoard"></canvas>
+      </div>
+      <div class="score-panel">
+        <div class="score-row">
+          <span class="score-team" style="color:#ef4444">🔴 الفريق الأحمر</span>
+          <span class="score-num" id="scoreRed">0</span>
+        </div>
+        <div class="score-row">
+          <span class="score-team" style="color:#3b82f6">🔵 الفريق الأزرق</span>
+          <span class="score-num" id="scoreBlue">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Panel -->
+    <div>
+      <div class="q-panel">
+        <div class="q-counter" id="qCounter">سؤال 1</div>
+        <div class="q-text" id="qText">جاري تحميل السؤال...</div>
+        <div class="timer-wrap">
+          <div class="timer-circle" id="timerCircle">20</div>
+          <div style="flex:1">
+            <div style="height:4px;background:#222;border-radius:2px">
+              <div id="timerBar" style="height:100%;background:#fff;transition:width 1s linear;width:100%;border-radius:2px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="answered-info" id="answeredInfo">انتظار الإجابات...</div>
+        <div class="ans-bars" id="ansBars"></div>
+        <div class="cheat-alert" id="cheatAlert">
+          <p id="cheatMsg" style="color:#ef4444;font-size:0.82rem;font-weight:700"></p>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn-next" onclick="stopDotsTimer()" id="stopBtn">⏸ إيقاف</button>
+          <button class="btn-next" onclick="showDotsResults()" id="showResBtn">📊 نتائج</button>
+          <button class="btn-next" onclick="skipDotsQ()" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid #333">⏭ تخطي</button>
+        </div>
+      </div>
+
+      <!-- لاختيار الخط — يظهر بعد نتائج السؤال -->
+      <div id="lineSelectPanel" style="display:none">
+        <div class="q-panel" style="margin-top:1rem">
+          <p style="font-size:0.8rem;letter-spacing:0.2em;color:#888;margin-bottom:0.5rem">الفريق الفائز يختار خطاً</p>
+          <div id="winningTeamInfo" style="font-weight:700;margin-bottom:1rem"></div>
+          <p style="font-size:0.75rem;color:#666;margin-bottom:1rem">اللاعبون يختارون الخط من أجهزتهم — أو المضيف يختار هنا:</p>
+          <div id="leaderSelect" style="margin-bottom:1rem"></div>
+          <button class="btn-next" onclick="nextDotsQuestion()" style="width:100%">السؤال التالي ⬅</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Winner -->
+<div id="winnerScreen" class="main">
+  <div class="winner-icon" id="winnerIcon">🏆</div>
+  <div class="winner-text" id="winnerText">الفائز!</div>
+  <div id="finalScores" style="margin-top:2rem"></div>
+  <button class="btn btn-create" style="margin-top:2rem" onclick="location.href='/'">🔄 العب مرة أخرى</button>
+</div>
+
+<!-- AI Modal -->
+<div id="aiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;padding:2rem;width:100%;max-width:440px;position:relative">
+    <button onclick="closeAIModal()" style="position:absolute;top:1rem;left:1rem;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer">✕</button>
+    <h3 style="font-family:'Oswald',sans-serif;letter-spacing:0.2em;margin-bottom:1.5rem;font-size:1rem">🤖 توليد أسئلة</h3>
+    <label class="label">الموضوع</label>
+    <input type="text" id="aiTopic" placeholder="مثال: تاريخ، رياضة، جغرافيا..."/>
+    <label class="label">عدد الأسئلة</label>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem" id="aiCountBtns">
+      <button onclick="setAICount(5)"  id="aic-5"  style="flex:1;padding:0.5rem;border:1px solid #fff;background:#fff;color:#111;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">5</button>
+      <button onclick="setAICount(10)" id="aic-10" style="flex:1;padding:0.5rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">10</button>
+      <button onclick="setAICount(15)" id="aic-15" style="flex:1;padding:0.5rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">15</button>
+    </div>
+    <label class="label">الصعوبة</label>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem">
+      <button onclick="setAIDiff('سهل')"   id="aid-سهل"   style="flex:1;padding:0.5rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">سهل</button>
+      <button onclick="setAIDiff('متوسط')" id="aid-متوسط" style="flex:1;padding:0.5rem;border:1px solid #fff;background:#fff;color:#111;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">متوسط</button>
+      <button onclick="setAIDiff('صعب')"   id="aid-صعب"   style="flex:1;padding:0.5rem;border:1px solid #333;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-family:Tajawal,sans-serif">صعب</button>
+    </div>
+    <button id="aiGenerateBtn" onclick="generateQuestions()" class="btn btn-create">✨ توليد</button>
+    <div id="aiStatus" style="display:none;text-align:center;margin-top:1rem;color:#888;font-size:0.85rem">
+      <div style="animation:spin 1s linear infinite;font-size:1.5rem;display:inline-block">⟳</div>
+      <div id="aiStatusText" style="margin-top:0.3rem">جاري التوليد...</div>
+    </div>
+  </div>
+</div>
+<style>@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}</style>
+
+<script>
+const socket = io();
+let roomCode = null;
+let gridSize = 5;
+let questions = [];
+let qCount = 0;
+let timerInterval = null;
+let currentQ = 0;
+let scores = {red:0, blue:0};
+// Board state
+let lines = {}; // "h_r_c" or "v_r_c" -> 'red'|'blue'
+let boxes = {};  // "r_c" -> 'red'|'blue'
+let winningTeam = null;
+let aiCount = 5;
+let aiDiff = 'متوسط';
+let audioCtx = null;
+
+// ── Grid size ──
+function setGrid(n){
+  gridSize = n;
+  [5,6,7,8].forEach(x=>{
+    const b = document.getElementById('grid-'+x);
+    b.style.background = x===n?'#fff':'transparent';
+    b.style.color = x===n?'#111':'#fff';
+    b.style.borderColor = x===n?'#fff':'#333';
+  });
+}
+
+// ── Questions Builder ──
+function addQuestion(){
+  const i = qCount++;
+  questions.push({question:'',answers:['','','',''],correct:0,time:20});
+  const div = document.createElement('div');
+  div.style.cssText='background:#111;border:1px solid #222;border-radius:3px;padding:1rem;margin-bottom:0.8rem;';
+  div.id='qcard-'+i;
+  div.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+      <span style="font-size:0.75rem;color:#666;letter-spacing:0.2em">سؤال ${i+1}</span>
+      <button onclick="removeQ(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.85rem">🗑 حذف</button>
+    </div>
+    <textarea rows="2" placeholder="نص السؤال..." oninput="questions[${i}].question=this.value"
+      style="width:100%;padding:0.6rem;border:1px solid #333;background:#0a0a0a;color:#fff;border-radius:2px;font-family:Tajawal,sans-serif;margin-bottom:0.5rem;resize:none;outline:none"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:0.5rem">
+      ${[0,1,2,3].map(j=>`
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <input type="radio" name="correct-${i}" ${j===0?'checked':''} onchange="questions[${i}].correct=${j}" style="width:auto;margin:0"/>
+          <input type="text" placeholder="خيار ${j+1}" value=""
+            oninput="questions[${i}].answers[${j}]=this.value"
+            style="flex:1;padding:0.5rem;border:1px solid #333;background:#0a0a0a;color:#fff;border-radius:2px;font-family:Tajawal,sans-serif;font-size:0.85rem;outline:none"/>
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <span style="font-size:0.75rem;color:#666">⏱ الوقت:</span>
+      <select onchange="questions[${i}].time=+this.value" style="padding:0.3rem;border:1px solid #333;background:#111;color:#fff;border-radius:2px;font-family:Tajawal,sans-serif;font-size:0.8rem">
+        ${[10,15,20,30,45,60].map(t=>`<option value="${t}" ${t===20?'selected':''}>${t}ث</option>`).join('')}
+      </select>
+    </div>
+  `;
+  document.getElementById('questionsContainer').appendChild(div);
+}
+
+function removeQ(i){
+  questions[i] = null;
+  const el = document.getElementById('qcard-'+i);
+  if(el) el.remove();
+}
+
+// ── Create Room ──
+function createDotsRoom(){
+  const validQ = questions.filter(q=>q && q.question.trim() && q.answers.filter(a=>a.trim()).length >= 2);
+  if(validQ.length === 0){ alert('أضف سؤالاً واحداً على الأقل!'); return; }
+  const qTime = parseInt(document.getElementById('qTime').value);
+  validQ.forEach(q=>q.time=qTime);
+  socket.emit('dots:create', { questions: validQ, gridSize });
+}
+
+socket.on('dots:created', ({code})=>{
+  roomCode = code;
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('lobby').style.display = 'block';
+  document.getElementById('lobbyCode').textContent = code;
+  const url = location.origin + '/dots-play.html?code=' + code;
+  document.getElementById('qrImg').src = '/qr?url=' + encodeURIComponent(url);
+});
+
+socket.on('dots:playerList', ({players})=>{
+  const red = players.filter(p=>p.team==='red');
+  const blue = players.filter(p=>p.team==='blue');
+  document.getElementById('redLabel').textContent = `🔴 الفريق الأحمر (${red.length}/2)`;
+  document.getElementById('blueLabel').textContent = `🔵 الفريق الأزرق (${blue.length}/2)`;
+  document.getElementById('teamRed').innerHTML = red.map(p=>`
+    <div class="player-chip" style="border-color:#ef44441a">
+      <button class="kick-btn" onclick="kickDots('${p.socketId}')">✕</button>
+      ${p.name}
+    </div>`).join('');
+  document.getElementById('teamBlue').innerHTML = blue.map(p=>`
+    <div class="player-chip" style="border-color:#3b82f61a">
+      <button class="kick-btn" onclick="kickDots('${p.socketId}')">✕</button>
+      ${p.name}
+    </div>`).join('');
+  const ready = red.length >= 2 && blue.length >= 2;
+  document.getElementById('startBtn').disabled = !ready;
+  document.getElementById('startBtn').textContent = ready ? '▶ ابدأ اللعبة' : `▶ انتظار اللاعبين (${players.length}/4)`;
+});
+
+function kickDots(sid){ socket.emit('dots:kick', {code:roomCode, socketId:sid}); }
+
+function startDotsGame(){ socket.emit('dots:start', {code:roomCode}); }
+
+// ── Game ──
+socket.on('dots:question', ({index, total, question, answers, correct, time})=>{
+  currentQ = index;
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('gamescreen').style.display = 'block';
+  document.getElementById('lineSelectPanel').style.display = 'none';
+  document.getElementById('qCounter').textContent = `سؤال ${index+1} / ${total}`;
+  document.getElementById('qText').textContent = question;
+  document.getElementById('answeredInfo').textContent = 'انتظار الإجابات...';
+  
+  // build answer bars
+  const colors = ['#ccc','#1a1a1a','#444','#222'];
+  const symbols = ['▲','♦','●','★'];
+  document.getElementById('ansBars').innerHTML = answers.map((a,i)=>`
+    <div class="ans-bar-wrap">
+      <div class="ans-bar-count" id="bar-count-${i}">0</div>
+      <div class="ans-bar" style="background:${colors[i]};height:4px" id="bar-${i}"></div>
+      <div class="ans-bar-label">${symbols[i]}</div>
+    </div>
+  `).join('');
+
+  // timer
+  clearInterval(timerInterval);
+  let t = time;
+  const el = document.getElementById('timerCircle');
+  el.textContent = t;
+  el.style.borderColor = '#fff'; el.style.color = '#fff';
+  document.getElementById('timerBar').style.transition='none';
+  document.getElementById('timerBar').style.width='100%';
+  setTimeout(()=>{
+    document.getElementById('timerBar').style.transition=`width ${time}s linear`;
+    document.getElementById('timerBar').style.width='0%';
+  },50);
+
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.disabled=false; stopBtn.style.opacity='1';
+
+  timerInterval = setInterval(()=>{
+    t--;
+    el.textContent = t;
+    if(t<=5&&t>0){el.style.borderColor='#ff4444';el.style.color='#ff4444';playTick(t===1);}
+    if(t<=0){clearInterval(timerInterval);showDotsResults();}
+  },1000);
+});
+
+socket.on('dots:answeredCount', ({count, total, barData})=>{
+  document.getElementById('answeredInfo').textContent = `${count} / ${total} أجابوا`;
+  if(barData) barData.forEach((c,i)=>{
+    const bar = document.getElementById('bar-'+i);
+    const cnt = document.getElementById('bar-count-'+i);
+    if(bar){ bar.style.height = Math.max(4, c*20)+'px'; }
+    if(cnt){ cnt.textContent = c; }
+  });
+});
+
+socket.on('dots:suspicious', ({message})=>{
+  const el = document.getElementById('cheatAlert');
+  el.style.display='block';
+  document.getElementById('cheatMsg').textContent = message;
+  setTimeout(()=>el.style.display='none',5000);
+});
+
+function stopDotsTimer(){
+  clearInterval(timerInterval);
+  const el=document.getElementById('timerCircle');
+  el.style.borderColor='#888';el.style.color='#888';
+  document.getElementById('stopBtn').disabled=true;
+  document.getElementById('stopBtn').style.opacity='0.4';
+}
+
+function showDotsResults(){ clearInterval(timerInterval); socket.emit('dots:showResults',{code:roomCode}); }
+function skipDotsQ(){ if(confirm('تخطي هذا السؤال؟')){ clearInterval(timerInterval); socket.emit('dots:skip',{code:roomCode}); } }
+
+socket.on('dots:results', ({correct, winTeam, winName, scores: s, canDrawLine})=>{
+  scores = s;
+  winningTeam = winTeam;
+  document.getElementById('scoreRed').textContent = s.red;
+  document.getElementById('scoreBlue').textContent = s.blue;
+  document.getElementById('lineSelectPanel').style.display = 'block';
+  if(winName && canDrawLine){
+    const color = winTeam==='red'?'#ef4444':'#3b82f6';
+    const emoji = winTeam==='red'?'🔴':'🔵';
+    document.getElementById('winningTeamInfo').innerHTML = `<span style="color:${color}">⚡ ${winName}</span> أسرع إجابة — يرسم خطاً`;
+    document.getElementById('leaderSelect').innerHTML = `<p style="font-size:0.8rem;color:#888">اللاعب يختار الخط من جهازه...</p>`;
+  } else if(winName && !canDrawLine){
+    const color = winTeam==='red'?'#ef4444':'#3b82f6';
+    document.getElementById('winningTeamInfo').innerHTML = `<span style="color:${color}">⚡ ${winName}</span> أسرع إجابة`;
+    document.getElementById('leaderSelect').innerHTML = `<p style="font-size:0.75rem;color:#666">الشبكة ممتلئة</p>`;
+  } else {
+    document.getElementById('winningTeamInfo').textContent = 'لا أحد أجاب صح';
+    document.getElementById('leaderSelect').innerHTML = '';
+  }
+});
+
+socket.on('dots:lineDrawn', ({lineKey, team, newBoxes, scores: s})=>{
+  scores = s;
+  document.getElementById('scoreRed').textContent = s.red;
+  document.getElementById('scoreBlue').textContent = s.blue;
+  lines[lineKey] = team;
+  newBoxes.forEach(k=> boxes[k] = team);
+  drawBoard();
+});
+
+socket.on('dots:gameEnd', ({winner, scores: s})=>{
+  document.getElementById('gamescreen').style.display='none';
+  document.getElementById('winnerScreen').style.display='block';
+  const icons={red:'🔴',blue:'🔵',tie:'🤝'};
+  const names={red:'الفريق الأحمر',blue:'الفريق الأزرق',tie:'تعادل!'};
+  document.getElementById('winnerIcon').textContent = icons[winner]||'🏆';
+  document.getElementById('winnerText').textContent = names[winner]||'';
+  document.getElementById('finalScores').innerHTML=`
+    <div style="display:flex;gap:2rem;justify-content:center">
+      <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:#ef4444">${s.red}</div><div style="font-size:0.75rem;color:#888">🔴 الأحمر</div></div>
+      <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:#3b82f6">${s.blue}</div><div style="font-size:0.75rem;color:#888">🔵 الأزرق</div></div>
+    </div>`;
+});
+
+function nextDotsQuestion(){ socket.emit('dots:next',{code:roomCode}); }
+
+// ── Board Drawing ──
+function initBoard(){
+  const canvas = document.getElementById('dotsBoard');
+  const size = Math.min(380, window.innerWidth - 60);
+  canvas.width = size; canvas.height = size;
+  drawBoard();
+}
+
+function drawBoard(){
+  const canvas = document.getElementById('dotsBoard');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const n = gridSize;
+  const pad = 24;
+  const step = (size - pad*2) / (n-1);
+  ctx.clearRect(0,0,size,size);
+
+  // draw completed lines
+  Object.entries(lines).forEach(([key,team])=>{
+    const color = team==='red'?'#ef4444':'#3b82f6';
+    const parts = key.split('_');
+    const type=parts[0],r=+parts[1],c=+parts[2];
+    ctx.strokeStyle=color; ctx.lineWidth=3;
+    ctx.beginPath();
+    if(type==='h'){
+      ctx.moveTo(pad+c*step, pad+r*step);
+      ctx.lineTo(pad+(c+1)*step, pad+r*step);
+    } else {
+      ctx.moveTo(pad+c*step, pad+r*step);
+      ctx.lineTo(pad+c*step, pad+(r+1)*step);
+    }
+    ctx.stroke();
+  });
+
+  // draw completed boxes
+  Object.entries(boxes).forEach(([key,team])=>{
+    const [r,c] = key.split('_').map(Number);
+    const color = team==='red'?'rgba(239,68,68,0.25)':'rgba(59,130,246,0.25)';
+    ctx.fillStyle=color;
+    ctx.fillRect(pad+c*step+2, pad+r*step+2, step-4, step-4);
+    // team symbol in center
+    ctx.fillStyle = team==='red'?'#ef4444':'#3b82f6';
+    ctx.font = `bold ${Math.max(10,step*0.35)}px Tajawal`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(team==='red'?'🔴':'🔵', pad+c*step+step/2, pad+r*step+step/2);
+  });
+
+  // draw dots
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    ctx.fillStyle='#fff';
+    ctx.beginPath();
+    ctx.arc(pad+c*step, pad+r*step, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+// ── AI ──
+function setAICount(n){
+  aiCount=n;
+  [5,10,15].forEach(x=>{
+    const b=document.getElementById('aic-'+x);
+    b.style.background=x===n?'#fff':'transparent';
+    b.style.color=x===n?'#111':'#fff';
+    b.style.borderColor=x===n?'#fff':'#333';
+  });
+}
+function setAIDiff(d){
+  aiDiff=d;
+  ['سهل','متوسط','صعب'].forEach(x=>{
+    const b=document.getElementById('aid-'+x);
+    b.style.background=x===d?'#fff':'transparent';
+    b.style.color=x===d?'#111':'#fff';
+    b.style.borderColor=x===d?'#fff':'#333';
+  });
+}
+function openAIModal(){ document.getElementById('aiModal').style.display='flex'; setTimeout(()=>document.getElementById('aiTopic').focus(),100); }
+function closeAIModal(){ document.getElementById('aiModal').style.display='none'; document.getElementById('aiStatus').style.display='none'; document.getElementById('aiGenerateBtn').disabled=false; }
+
+async function generateQuestions(){
+  const topic=document.getElementById('aiTopic').value.trim();
+  if(!topic){alert('اكتب الموضوع');return;}
+  document.getElementById('aiGenerateBtn').disabled=true;
+  document.getElementById('aiStatus').style.display='block';
+  document.getElementById('aiStatusText').textContent='جاري التوليد...';
+  const prompt=`أنشئ ${aiCount} سؤال اختيار من متعدد باللغة العربية عن: "${topic}". مستوى: ${aiDiff}. أجب بـ JSON فقط:\n[{"question":"...","answers":["","","",""],"correct":0}]`;
+  try{
+    let apiKey='';
+    try{ const r=await fetch('/ai-key'); if(r.ok){const d=await r.json();apiKey=d.key;} }catch(e){}
+    if(!apiKey){document.getElementById('aiStatusText').textContent='❌ المفتاح غير مضبوط على السيرفر';document.getElementById('aiGenerateBtn').disabled=false;return;}
+    const response=await fetch('https://api.cohere.com/v2/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'X-Client-Name':'alpha-quiz'},
+      body:JSON.stringify({model:'command-r-plus-08-2024',messages:[{role:'user',content:prompt}],max_tokens:4000,temperature:0.7})
+    });
+    if(!response.ok){const e=await response.json();throw new Error(e.message||'خطأ');}
+    const data=await response.json();
+    const text=data.message.content[0].text;
+    const match=text.match(/\[[\s\S]*\]/);
+    if(!match) throw new Error('تعذر تحليل الأسئلة');
+    const generated=JSON.parse(match[0]);
+    generated.forEach(q=>{
+      const i=qCount++;
+      questions.push({question:q.question,answers:q.answers,correct:q.correct,time:20});
+      const div=document.createElement('div');
+      div.style.cssText='background:#111;border:1px solid #222;border-radius:3px;padding:1rem;margin-bottom:0.8rem;';
+      div.id='qcard-'+i;
+      div.innerHTML=`<div style="font-size:0.75rem;color:#666;margin-bottom:0.5rem">سؤال ${i+1} — <span style="color:#22c55e">AI ✓</span></div><div style="font-weight:700;margin-bottom:0.5rem">${q.question}</div><div style="font-size:0.8rem;color:#888">${q.answers.map((a,j)=>`${j===q.correct?'✅':'○'} ${a}`).join(' · ')}</div>`;
+      document.getElementById('questionsContainer').appendChild(div);
+    });
+    closeAIModal();
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:0.8rem 1.5rem;border-radius:2px;font-family:Tajawal,sans-serif;z-index:999;font-size:0.9rem';
+    t.textContent=`✅ تم توليد ${generated.length} سؤال!`;
+    document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+  }catch(e){document.getElementById('aiStatusText').textContent='❌ '+e.message;document.getElementById('aiGenerateBtn').disabled=false;}
+}
+
+// ── Audio ──
+function playTick(isLast){
+  try{
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    osc.frequency.value=isLast?880:660;osc.type='sine';
+    gain.gain.setValueAtTime(0.35,audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.1);
+    osc.start(audioCtx.currentTime);osc.stop(audioCtx.currentTime+0.1);
+  }catch(e){}
+}
+
+window.addEventListener('load', initBoard);
+</script>
+</body>
+</html>

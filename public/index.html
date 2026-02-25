@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ALPHA — العاب</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Barlow+Condensed:ital,wght@1,800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;min-height:100vh;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.bg-pattern{position:fixed;inset:0;z-index:0;background-image:url('/iqgc-logo.png');background-size:cover;background-position:left center;opacity:0.12;filter:grayscale(100%) contrast(200%);transform:scale(1.1);}
+.bg-overlay{position:fixed;inset:0;z-index:1;background:radial-gradient(ellipse at center,rgba(17,17,17,0.4) 0%,rgba(17,17,17,0.9) 100%);}
+.container{text-align:center;padding:2rem;max-width:500px;width:100%;position:relative;z-index:2;}
+.logo-text{font-family:'Barlow Condensed',sans-serif;font-size:5rem;font-weight:800;font-style:italic;color:#fff;letter-spacing:-0.01em;text-transform:uppercase;}
+.logo-sub{font-size:0.65rem;letter-spacing:0.5em;color:#555;text-transform:uppercase;margin-top:0.3rem;margin-bottom:2rem;}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);margin:1.5rem 0;}
+.section-label{font-size:0.72rem;letter-spacing:0.4em;color:#555;text-transform:uppercase;margin-bottom:1.2rem;}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.game-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;padding:1.5rem 1rem;position:relative;overflow:hidden;cursor:pointer;transition:all 0.15s;text-decoration:none;display:block;}
+.game-card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.3);transform:translateY(-2px);}
+.game-card::after{content:'';position:absolute;top:0;right:0;width:2px;height:100%;background:rgba(255,255,255,0.4);}
+.game-icon{font-size:2.5rem;margin-bottom:0.8rem;}
+.game-name{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:800;font-style:italic;letter-spacing:0.1em;color:#fff;margin-bottom:0.3rem;}
+.game-desc{font-size:0.72rem;letter-spacing:0.15em;color:#555;text-transform:uppercase;}
+.btn{display:block;width:100%;padding:0.9rem;border:none;border-radius:2px;font-size:0.95rem;letter-spacing:0.2em;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s;text-decoration:none;text-align:center;}
+.btn-play{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.2);margin-bottom:0.5rem;}
+.btn-play:hover{border-color:#fff;}
+.powered{margin-top:2rem;font-size:0.62rem;color:#2a2a2a;letter-spacing:0.35em;text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-overlay"></div>
+<div class="container">
+  <div class="logo-text">ALPHA</div>
+  <div class="logo-sub">Cyber Cafe • Game Night</div>
+  <div class="section-label">اختر اللعبة</div>
+  <div class="games-grid">
+    <a href="/host.html" class="game-card">
+      <div class="game-icon">🎯</div>
+      <div class="game-name">تحدي الأسئلة</div>
+      <div class="game-desc">مسابقة أسئلة</div>
+    </a>
+    <a href="/dots-host.html" class="game-card">
+      <div class="game-icon">🔴</div>
+      <div class="game-name">بيت بيوت</div>
+      <div class="game-desc">فريقين • 4 لاعبين</div>
+    </a>
+  </div>
+  <a class="btn btn-play" href="/play.html">🕹️ انضم بكود</a>
+  <div class="powered">ALPHA Cyber Cafe © 2026</div>
+  <a href="/admin.html" style="display:block;margin-top:0.8rem;font-size:0.65rem;letter-spacing:0.3em;color:#222;text-transform:uppercase;text-decoration:none;transition:color 0.15s" onmouseover="this.style.color='#555'" onmouseout="this.style.color='#222'">⚙ لوحة المراقبة</a>
+  <a href="https://www.instagram.com/alpha.iq_" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1rem;color:#fff;text-decoration:none;font-size:0.85rem;letter-spacing:0.15em;opacity:0.6;transition:opacity 0.2s;border:1px solid rgba(255,255,255,0.15);padding:0.5rem 1.2rem;border-radius:20px;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg><span>@alpha.iq_</span></a>
+</div>
+</body>
+</html>

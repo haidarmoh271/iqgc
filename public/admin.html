@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ALPHA — لوحة الإدارة</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Barlow+Condensed:ital,wght@1,800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;}
+
+/* خلفية */
+body::before{content:'';position:fixed;inset:0;background-image:url('/iqgc-logo.png');background-size:cover;background-position:left center;opacity:0.05;filter:grayscale(100%) contrast(200%);pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(10,10,10,0.6) 0%,rgba(10,10,10,0.95) 100%);pointer-events:none;}
+
+.topbar{position:relative;z-index:2;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.topbar-brand{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:800;font-style:italic;letter-spacing:0.05em;}
+.topbar-sub{font-size:0.7rem;letter-spacing:0.4em;color:#555;text-transform:uppercase;}
+.admin-badge{font-size:0.7rem;letter-spacing:0.2em;color:#22c55e;border:1px solid #22c55e33;padding:0.3rem 0.8rem;border-radius:2px;}
+
+/* Login */
+#loginScreen{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;min-height:80vh;}
+.login-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;padding:2rem;width:100%;max-width:360px;text-align:center;}
+.login-card h2{font-size:1.1rem;letter-spacing:0.2em;margin-bottom:0.3rem;}
+.login-card p{font-size:0.75rem;color:#555;letter-spacing:0.2em;margin-bottom:1.5rem;}
+input{width:100%;padding:0.9rem 1rem;border-radius:2px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:1rem;font-family:'Tajawal',sans-serif;text-align:right;letter-spacing:0.05em;margin-bottom:0.8rem;}
+input:focus{outline:none;border-color:rgba(255,255,255,0.3);}
+.btn{width:100%;padding:0.9rem;border:none;border-radius:2px;font-size:1rem;letter-spacing:0.2em;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-login{background:#fff;color:#111;}
+.btn-login:hover{background:#e5e5e5;}
+
+/* Dashboard */
+#dashboard{display:none;position:relative;z-index:2;padding:1.5rem 2rem;}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.dash-header h2{font-size:1rem;letter-spacing:0.3em;color:#888;text-transform:uppercase;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-left:0.5rem;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:1rem;text-align:center;}
+.stat-num{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:800;font-style:italic;color:#fff;}
+.stat-label{font-size:0.7rem;letter-spacing:0.3em;color:#555;text-transform:uppercase;margin-top:0.2rem;}
+
+.rooms-grid{display:grid;gap:1rem;}
+.room-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:1.2rem;position:relative;overflow:hidden;}
+.room-card::before{content:'';position:absolute;top:0;right:0;width:2px;height:100%;background:var(--state-color,#555);}
+.room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;}
+.room-title{font-size:1rem;font-weight:700;}
+.room-code{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;font-style:italic;color:#555;}
+.room-meta{display:flex;gap:1rem;font-size:0.75rem;color:#555;margin-bottom:0.8rem;}
+.state-badge{font-size:0.65rem;letter-spacing:0.2em;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;}
+.state-lobby{background:rgba(234,179,8,0.15);color:#eab308;border:1px solid #eab30833;}
+.state-question{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e33;}
+.state-finished{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid #6b728033;}
+
+.players-list{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.8rem;}
+.player-tag{font-size:0.78rem;padding:0.3rem 0.7rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:2px;display:flex;align-items:center;gap:0.4rem;}
+.player-tag .score{color:#888;font-size:0.7rem;}
+.player-kick{background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.75rem;padding:0;margin-right:0.2rem;}
+
+.room-actions{display:flex;gap:0.5rem;margin-top:0.5rem;}
+.btn-close-room{padding:0.5rem 1rem;background:rgba(239,68,68,0.1);border:1px solid #ef444433;color:#ef4444;border-radius:2px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:0.8rem;letter-spacing:0.1em;transition:all 0.15s;}
+.btn-close-room:hover{background:rgba(239,68,68,0.2);}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:#333;}
+.empty-state p{font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase;}
+
+.refresh-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#888;padding:0.4rem 1rem;border-radius:2px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:0.8rem;letter-spacing:0.1em;transition:all 0.15s;}
+.refresh-btn:hover{border-color:#fff;color:#fff;}
+
+.toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:0.7rem 1.5rem;border-radius:2px;font-weight:700;font-size:0.9rem;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-brand">ALPHA</div>
+    <div class="topbar-sub">Admin Panel</div>
+  </div>
+  <div id="adminStatus" style="display:none" class="admin-badge">● مباشر</div>
+</div>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:2.5rem;margin-bottom:0.8rem">🛡️</div>
+    <h2>لوحة الإدارة</h2>
+    <p>IQGC</p>
+    <input type="text" id="userInput" placeholder="اسم المستخدم" maxlength="20"
+      autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('passInput').focus()"
+      style="letter-spacing:0.1em;text-align:right"/>
+    <input type="password" id="passInput" placeholder="كلمة السر" maxlength="20"
+      onkeydown="if(event.key==='Enter')adminLogin()"/>
+    <button class="btn btn-login" onclick="adminLogin()">دخول ◀</button>
+    <div id="loginError" style="display:none;margin-top:0.8rem;font-size:0.8rem;color:#ef4444;letter-spacing:0.1em"></div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="dash-header">
+    <h2><span class="live-dot"></span> الجلسات المباشرة</h2>
+    <button class="refresh-btn" onclick="refreshRooms()">🔄 تحديث</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statRooms">0</div>
+      <div class="stat-label">غرفة مفتوحة</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statPlayers">0</div>
+      <div class="stat-label">لاعب نشط</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statActive">0</div>
+      <div class="stat-label">لعبة جارية</div>
+    </div>
+  </div>
+
+  <div class="rooms-grid" id="roomsGrid">
+    <div class="empty-state"><p>لا توجد غرف مفتوحة</p></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const socket = io();
+let adminPass = '';
+
+socket.on('connect_error', ()=>{
+  showToast('❌ تعذر الاتصال بالسيرفر');
+});
+
+socket.on('disconnect', ()=>{
+  showToast('⚠️ انقطع الاتصال — يعيد المحاولة...');
+});
+
+socket.on('reconnect', ()=>{
+  if(adminPass) socket.emit('admin:subscribe', { pass: adminPass });
+});
+
+function adminLogin(){
+  const user = document.getElementById('userInput').value.trim();
+  const pass = document.getElementById('passInput').value.trim();
+  const errEl = document.getElementById('loginError');
+  if(!user){ errEl.textContent='أدخل اسم المستخدم'; errEl.style.display='block'; return; }
+  if(!pass){ errEl.textContent='أدخل كلمة السر'; errEl.style.display='block'; return; }
+  if(user !== 'admin'){ errEl.textContent='اسم المستخدم غير صحيح ❌'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  adminPass = pass;
+  socket.emit('admin:subscribe', { pass });
+}
+
+socket.on('admin:error', (msg)=>{
+  const errEl = document.getElementById('loginError');
+  if(errEl){ errEl.textContent='كلمة السر غير صحيحة ❌'; errEl.style.display='block'; }
+  showToast('❌ ' + msg);
+});
+
+socket.on('admin:rooms', (rooms)=>{
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('adminStatus').style.display = 'block';
+  renderRooms(rooms);
+});
+
+function refreshRooms(){
+  socket.emit('admin:getRooms', { pass: adminPass });
+}
+
+function renderRooms(rooms){
+  // stats
+  document.getElementById('statRooms').textContent = rooms.length;
+  document.getElementById('statPlayers').textContent = rooms.reduce((s,r)=>s+r.playerCount,0);
+  document.getElementById('statActive').textContent = rooms.filter(r=>r.state==='question').length;
+
+  const grid = document.getElementById('roomsGrid');
+  if(!rooms.length){
+    grid.innerHTML = '<div class="empty-state"><p>لا توجد غرف مفتوحة حالياً</p></div>';
+    return;
+  }
+
+  const stateColor = { lobby:'#eab308', question:'#22c55e', finished:'#6b7280' };
+  const stateLabel = { lobby:'انتظار', question:'جارية', finished:'منتهية' };
+  const stateClass = { lobby:'state-lobby', question:'state-question', finished:'state-finished' };
+
+  grid.innerHTML = rooms.map(room => `
+    <div class="room-card" style="--state-color:${stateColor[room.state]||'#555'}">
+      <div class="room-header">
+        <div>
+          <div class="room-title">${room.title}</div>
+          <div class="room-meta">
+            <span>👥 ${room.playerCount} لاعب</span>
+            <span>${room.gameMode === 'team' ? '🏆 فريق' : '👤 فردي'}</span>
+            ${room.state === 'question' ? `<span>📋 سؤال ${room.currentQ+1}/${room.totalQ}</span>` : ''}
+          </div>
+        </div>
+        <div style="text-align:center">
+          <div class="room-code">${room.code}</div>
+          <span class="state-badge ${stateClass[room.state]||''}">${stateLabel[room.state]||room.state}</span>
+        </div>
+      </div>
+
+      ${room.players.length ? `
+        <div class="players-list">
+          ${room.players.map(p=>`
+            <div class="player-tag">
+              <button class="player-kick" onclick="kickPlayer('${room.code}','${p.socketId}')" title="طرد">✕</button>
+              <span>${p.team ? p.team+' ' : ''}${p.name}</span>
+              <span class="score">${p.score.toLocaleString()}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <div class="room-actions">
+        <button class="btn-close-room" onclick="closeRoom('${room.code}')">🚫 إغلاق الغرفة</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function kickPlayer(code, socketId){
+  if(!confirm('طرد هذا اللاعب؟')) return;
+  socket.emit('admin:kickPlayer', { pass: adminPass, code, socketId });
+  showToast('تم طرد اللاعب');
+}
+
+function closeRoom(code){
+  if(!confirm('إغلاق هذه الغرفة وطرد جميع اللاعبين؟')) return;
+  socket.emit('admin:closeRoom', { pass: adminPass, code });
+  showToast('تم إغلاق الغرفة');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  if(!t) return console.log(msg);
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// auto refresh every 5 seconds
+setInterval(()=>{
+  if(adminPass) socket.emit('admin:getRooms', { pass: adminPass });
+}, 5000);
+</script>
+</body>
+</html>
