@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IQGC EVENT — شاشة العرض</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>"/>
+<script src="/socket.io/socket.io.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --red:#e21b3c; --blue:#1368ce; --yellow:#d89e00; --green:#26890c;
+}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  font-family:'Tajawal',sans-serif;
+  background:#0a0a0a;color:#fff;
+}
+
+/* ═══ JOIN SCREEN ═══ */
+#joinScreen{
+  display:flex;align-items:center;justify-content:center;
+  height:100vh;flex-direction:column;gap:1.5rem;
+}
+.brand{
+  font-family:'Oswald',sans-serif;
+  font-size:4rem;letter-spacing:0.2em;
+  background:linear-gradient(135deg,#fff 0%,#888 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.join-card{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:2.5rem;
+  width:90%;max-width:440px;text-align:center;
+}
+.join-card h2{font-size:1.1rem;letter-spacing:0.2em;margin-bottom:0.4rem;}
+.join-card p{font-size:0.8rem;color:#555;margin-bottom:1.8rem;}
+.code-input{
+  width:100%;padding:1.2rem;
+  font-size:2rem;font-family:'Oswald',sans-serif;
+  letter-spacing:0.5em;text-align:center;
+  background:rgba(255,255,255,0.06);
+  border:2px solid rgba(255,255,255,0.15);
+  border-radius:10px;color:#fff;outline:none;
+  text-transform:uppercase;
+}
+.code-input:focus{border-color:rgba(255,255,255,0.4);}
+.btn-join{
+  width:100%;margin-top:1rem;padding:1rem;
+  background:#fff;color:#111;
+  border:none;border-radius:10px;
+  font-family:'Tajawal',sans-serif;font-size:1.1rem;font-weight:900;
+  cursor:pointer;letter-spacing:0.1em;
+  transition:transform 0.15s,background 0.15s;
+}
+.btn-join:hover{background:#e5e5e5;transform:translateY(-2px);}
+.err-msg{color:#ef4444;font-size:0.85rem;margin-top:0.5rem;display:none;}
+
+/* ═══ LOBBY ═══ */
+#lobbyScreen{
+  display:none;align-items:center;justify-content:center;
+  height:100vh;flex-direction:column;gap:2rem;
+  background:radial-gradient(ellipse at center,#111 0%,#000 100%);
+}
+.lobby-title{font-family:'Oswald',sans-serif;font-size:2.5rem;letter-spacing:0.3em;color:#888;}
+.lobby-code-big{
+  font-family:'Oswald',sans-serif;
+  font-size:9rem;font-weight:700;letter-spacing:0.3em;
+  color:#fff;line-height:1;
+  text-shadow:0 0 60px rgba(255,255,255,0.15);
+  animation:pulse-glow 3s ease-in-out infinite;
+}
+@keyframes pulse-glow{
+  0%,100%{text-shadow:0 0 40px rgba(255,255,255,0.1);}
+  50%{text-shadow:0 0 80px rgba(255,255,255,0.25);}
+}
+.lobby-hint{font-size:1.1rem;color:#444;letter-spacing:0.3em;text-transform:uppercase;}
+.quiz-title-display{
+  font-size:1.8rem;font-weight:700;color:#fff;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;padding:1rem 2.5rem;
+}
+
+/* ═══ COUNTDOWN 3-2-1 ═══ */
+#countdownScreen{
+  display:none;align-items:center;justify-content:center;
+  height:100vh;
+}
+.countdown-num{
+  font-family:'Oswald',sans-serif;
+  font-size:18rem;font-weight:700;color:#fff;
+  animation:countAnim 0.9s ease-in-out;
+}
+@keyframes countAnim{
+  0%{transform:scale(1.4);opacity:0;}
+  40%{transform:scale(1);opacity:1;}
+  80%{transform:scale(1);opacity:1;}
+  100%{transform:scale(0.6);opacity:0;}
+}
+
+/* ═══ QUESTION SCREEN ═══ */
+#questionScreen{
+  display:none;
+  height:100vh;
+  flex-direction:column;
+}
+.q-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 2.5rem;
+  background:rgba(0,0,0,0.4);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
+}
+.q-counter{
+  font-family:'Oswald',sans-serif;
+  font-size:1.2rem;color:#666;letter-spacing:0.2em;
+}
+.timer-display{
+  width:80px;height:80px;
+  border-radius:50%;
+  border:5px solid rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;
+  transition:border-color 0.5s, color 0.5s;
+  position:relative;
+}
+.timer-display.urgent{border-color:#e21b3c;color:#e21b3c;}
+.q-body{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem 4rem;
+  gap:2.5rem;
+}
+.q-image-display{
+  width:100%;max-width:1000px;max-height:40vh;
+  object-fit:contain;border-radius:16px;
+  display:none;
+}
+.q-text-display{
+  font-size:2.8rem;font-weight:900;
+  text-align:center;line-height:1.3;
+  max-width:900px;
+  text-shadow:0 2px 20px rgba(0,0,0,0.5);
+}
+.answers-grid-display{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  width:100%;max-width:1000px;
+}
+.ans-display{
+  display:flex;align-items:center;gap:16px;
+  padding:1.2rem 1.8rem;
+  border-radius:14px;
+  border:3px solid transparent;
+  font-size:1.5rem;font-weight:700;
+  transition:transform 0.2s;
+}
+.ans-display .icon{
+  width:52px;height:52px;min-width:52px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;
+}
+
+/* ═══ RESULTS SCREEN ═══ */
+#resultsScreen{
+  display:none;
+  height:100vh;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2rem 3rem;
+  gap:1.5rem;
+}
+.results-title{
+  font-family:'Oswald',sans-serif;
+  font-size:2rem;letter-spacing:0.3em;color:#888;
+}
+.results-answers{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:14px;width:100%;max-width:1000px;
+}
+.res-card{
+  display:flex;align-items:center;gap:14px;
+  padding:1.2rem 1.6rem;
+  border-radius:14px;
+  border:3px solid transparent;
+  font-size:1.4rem;font-weight:700;
+  transition:all 0.4s;
+}
+.res-card .icon{
+  width:52px;height:52px;min-width:52px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+}
+.res-info{flex:1;}
+.res-text{font-weight:700;line-height:1.2;}
+.res-votes{font-size:0.9rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;}
+.res-pct{
+  font-family:'Oswald',sans-serif;
+  font-size:1.6rem;font-weight:700;
+}
+
+/* ═══ LEADERBOARD ═══ */
+#lbScreen{
+  display:none;height:100vh;
+  flex-direction:column;align-items:center;
+  justify-content:center;padding:2rem 4rem;gap:1rem;
+}
+.lb-title-big{
+  font-family:'Oswald',sans-serif;
+  font-size:2.5rem;letter-spacing:0.3em;margin-bottom:0.5rem;
+}
+.lb-row-big{
+  display:flex;align-items:center;gap:1.2rem;
+  width:100%;max-width:900px;
+  padding:1.2rem 2rem;
+  border-radius:14px;
+  animation:slideIn 0.5s ease both;
+  font-size:1.4rem;
+}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0;}to{transform:none;opacity:1;}}
+.lb-medal{font-size:2.2rem;width:52px;text-align:center;}
+.lb-name-big{flex:1;font-weight:700;}
+.lb-score-big{font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;}
+
+/* ═══ FINAL ═══ */
+#finalScreen{
+  display:none;height:100vh;
+  flex-direction:column;align-items:center;
+  justify-content:center;gap:1.5rem;
+  background:radial-gradient(ellipse at top,#1a1200 0%,#0a0a0a 60%);
+}
+.final-title{font-family:'Oswald',sans-serif;font-size:3rem;letter-spacing:0.3em;}
+.podium-display{
+  display:flex;align-items:flex-end;justify-content:center;gap:1rem;
+  margin:1rem 0;
+}
+.pod-display{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  gap:0.5rem;padding:1.5rem 1rem;border-radius:14px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+/* animations */
+@keyframes barUp{from{transform:scaleY(0);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-200px) scale(2);}}
+</style>
+</head>
+<body>
+
+<!-- Join -->
+<div id="joinScreen">
+  <div class="brand"><img src="/iqgc-logo.png" style="height:40px;" alt="IQGC"/></div>
+  <div class="join-card">
+    <h2>📺 شاشة العرض</h2>
+    <p>أدخل كود الغرفة للاتصال بها</p>
+    <input class="code-input" id="codeInput" maxlength="6" placeholder="XXXX"
+      onkeydown="if(event.key==='Enter')joinDisplay()"
+      oninput="this.value=this.value.toUpperCase()"/>
+    <div class="err-msg" id="errMsg">الغرفة غير موجودة ❌</div>
+    <button class="btn-join" onclick="joinDisplay()">اتصال 📺</button>
+  </div>
+</div>
+
+<!-- Lobby -->
+<div id="lobbyScreen">
+  <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+    <div style="font-family:'Oswald',sans-serif;font-size:1.4rem;letter-spacing:0.4em;color:#666;text-transform:uppercase">IQGC</div>
+    <div class="quiz-title-display" id="quizTitleDisplay"></div>
+    <!-- انضم للغرفة -->
+    <div style="
+      background:rgba(255,255,255,0.95);
+      border-radius:20px;
+      padding:2rem 2.5rem;
+      display:flex;flex-direction:column;align-items:center;gap:1rem;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    ">
+      <div style="font-family:'Tajawal',sans-serif;font-size:1.3rem;font-weight:900;color:#111;letter-spacing:0.1em">
+        📱 انضم للغرفة
+      </div>
+      <img src="/iqgc-logo.png" style="width:160px;margin-bottom:1.5rem;display:block;margin-left:auto;margin-right:auto;" alt="IQGC"/>
+      <img id="lobbyQR" width="440" height="440" style="border-radius:8px;display:block;" alt="QR"/>
+      <div style="font-family:'Oswald',sans-serif;font-size:2.2rem;font-weight:700;color:#111;letter-spacing:0.4em" id="lobbyCodeBig">----</div>
+    </div>
+    <div class="lobby-hint" style="animation:pulse-glow 2s ease-in-out infinite">في انتظار بدء اللعبة...</div>
+  </div>
+</div>
+
+<!-- Countdown -->
+<div id="countdownScreen">
+  <div class="countdown-num" id="cdNum">3</div>
+</div>
+
+<!-- Question -->
+<div id="questionScreen">
+  <div class="q-topbar">
+    <div class="q-counter" id="qCounterD">سؤال 1/1</div>
+    <div class="timer-display" id="timerD">20</div>
+  </div>
+  <div class="q-body">
+    <img id="qImgD" class="q-image-display"/>
+    <div class="q-text-display" id="qTextD"></div>
+    <div class="answers-grid-display" id="answersGridD"></div>
+  </div>
+</div>
+
+<!-- Results -->
+<div id="resultsScreen">
+  <div class="results-title">📊 نتائج السؤال</div>
+  <div class="results-answers" id="resultsAnswersD"></div>
+</div>
+
+<!-- Leaderboard -->
+<div id="lbScreen">
+  <div class="lb-title-big">🏆 المتصدرون</div>
+  <div id="lbRowsD" style="width:100%;max-width:900px;display:flex;flex-direction:column;gap:0.8rem"></div>
+</div>
+
+<!-- Final -->
+<div id="finalScreen">
+  <div class="final-title">🏆 النهاية!</div>
+  <div class="podium-display" id="podiumD"></div>
+  <div id="finalListD" style="display:flex;flex-direction:column;gap:0.6rem;width:100%;max-width:700px"></div>
+</div>
+
+<!-- Ad Overlay -->
+<div id="adOverlayD" style="display:none;position:fixed;inset:0;background:#000;z-index:999;">
+  <video id="adVideoD" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;" autoplay playsinline>
+    <source id="adVideoSrcD" src="" type="video/mp4"/>
+  </video>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;">
+    <div style="padding:1.5rem 2rem;background:linear-gradient(rgba(0,0,0,0.6),transparent);">
+      <div id="adTextD" style="font-family:'Tajawal',sans-serif;font-size:2rem;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.8)"></div>
+    </div>
+    <div style="padding:1rem 2rem 2rem;background:linear-gradient(transparent,rgba(0,0,0,0.7));">
+      <div style="height:4px;background:rgba(255,255,255,0.2);border-radius:2px;overflow:hidden">
+        <div id="adBarD" style="height:100%;background:#fff;width:100%;border-radius:2px;transition:width linear"></div>
+      </div>
+      <div id="adCounterD" style="font-size:0.9rem;color:rgba(255,255,255,0.5);margin-top:0.5rem;letter-spacing:0.1em"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+const COLORS = ['#e21b3c','#1368ce','#d89e00','#26890c'];
+const SHAPES = ['▲','◆','●','✦'];
+const MEDALS = ['🥇','🥈','🥉'];
+let myCode = '';
+let timerInterval = null;
+
+function show(id){
+  ['joinScreen','lobbyScreen','countdownScreen','questionScreen','resultsScreen','lbScreen','finalScreen']
+    .forEach(s=>{
+      const el = document.getElementById(s);
+      el.style.display = 'none';
+    });
+  const target = document.getElementById(id);
+  target.style.display = 'flex';
+}
+
+function joinDisplay(){
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if(!code){return;}
+  myCode = code;
+  socket.emit('display:join', {code});
+}
+
+socket.on('display:error', (msg)=>{
+  const err = document.getElementById('errMsg');
+  err.textContent = msg + ' ❌';
+  err.style.display = 'block';
+});
+
+socket.on('display:joined', ({code, title})=>{
+  document.getElementById('lobbyCodeBig').textContent = code;
+  document.getElementById('quizTitleDisplay').textContent = title || '';
+  // QR يشير لرابط اللعبة
+  const playUrl = location.protocol + '//' + location.host + '/play.html?code=' + code;
+  const qrImg = document.getElementById('lobbyQR');
+  qrImg.src = '/qr?url=' + encodeURIComponent(playUrl);
+  show('lobbyScreen');
+});
+
+// ── ردود فعل الجمهور ──
+socket.on('display:reaction', ({emoji, name})=>{
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;font-size:3.5rem;pointer-events:none;z-index:500;left:'+(10+Math.random()*80)+'%;bottom:10%;animation:floatUp 2.5s ease-out forwards;';
+  el.textContent = emoji;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2500);
+});
+
+// ── كل شيء يأتي من المضيف عبر display:sync ──
+socket.on('display:sync', ({action, data})=>{
+  if(action === 'paused'){
+    // overlay pause on display
+    let po = document.getElementById('displayPause');
+    if(!po){
+      po = document.createElement('div');
+      po.id = 'displayPause';
+      po.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;';
+      po.innerHTML = '<div style="font-size:5rem">⏸</div><div style="font-family:Oswald,sans-serif;font-size:2rem;letter-spacing:0.3em;color:#fbbf24">متوقف مؤقتاً</div>';
+      document.body.appendChild(po);
+    }
+    clearInterval(timerInterval);
+  } else if(action === 'resumed'){
+    const po = document.getElementById('displayPause');
+    if(po) po.remove();
+  } else if(action === 'question'){
+    clearInterval(timerInterval);
+    const po = document.getElementById('displayPause');
+    if(po) po.remove();
+    showQuestion(data.index, data.total, data.question, data.answers, data.time, data.image);
+  }
+  else if(action === 'results'){
+    clearInterval(timerInterval);
+    showResults(data);
+  }
+  else if(action === 'ad'){
+    showDisplayAd(data, ()=>{});
+  }
+  else if(action === 'adEnd'){
+    clearInterval(window._adTimerD);
+    document.getElementById('adOverlayD').style.display = 'none';
+    const v = document.getElementById('adVideoD');
+    if(v){ v.pause(); v.src=''; }
+  }
+  else if(action === 'end'){
+    clearInterval(timerInterval);
+    showFinal(data.final);
+  }
+});
+
+function showQuestion(index, total, question, answers, time, image){
+  document.getElementById('qCounterD').textContent = `سؤال ${index+1} / ${total}`;
+  document.getElementById('qTextD').textContent = question;
+
+  const img = document.getElementById('qImgD');
+  if(image){ img.src = image; img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
+
+  // رسم الإجابات
+  const grid = document.getElementById('answersGridD');
+  grid.innerHTML = answers.map((a,i)=>`
+    <div class="ans-display" style="background:${COLORS[i]}22;border-color:${COLORS[i]}66;">
+      <div class="icon" style="background:${COLORS[i]}">${SHAPES[i]}</div>
+      <span>${a}</span>
+    </div>
+  `).join('');
+
+  show('questionScreen');
+
+  // تايمر
+  let t = time;
+  const timerEl = document.getElementById('timerD');
+  timerEl.textContent = t;
+  timerEl.className = 'timer-display';
+  timerInterval = setInterval(()=>{
+    t--;
+    timerEl.textContent = t;
+    if(t <= 5) timerEl.className = 'timer-display urgent';
+    if(t <= 0){ clearInterval(timerInterval); }
+  }, 1000);
+}
+
+function showDisplayAd(ad, onDone){
+  let done = false;
+  const finish = ()=>{
+    if(done) return; done = true;
+    clearInterval(window._adTimerD);
+    document.getElementById('adOverlayD').style.display = 'none';
+    const v = document.getElementById('adVideoD');
+    v.pause(); v.src = '';
+    onDone();
+  };
+  const overlay = document.getElementById('adOverlayD');
+  overlay.style.display = 'block';
+  document.getElementById('adTextD').textContent = ad.text || '';
+  const video = document.getElementById('adVideoD');
+  const src = document.getElementById('adVideoSrcD');
+  src.src = ad.videoUrl;
+  video.load();
+  video.onended = ()=> finish();
+  video.onerror = ()=> setTimeout(finish, 3000);
+  video.play().catch(()=> setTimeout(finish, 3000));
+  video.onloadedmetadata = ()=>{
+    const dur = Math.round(video.duration) || 15;
+    const bar = document.getElementById('adBarD');
+    bar.style.transition = 'none'; bar.style.width = '100%';
+    setTimeout(()=>{ bar.style.transition = `width ${dur}s linear`; bar.style.width = '0%'; }, 50);
+    let t = dur;
+    document.getElementById('adCounterD').textContent = `يستمر ${t} ثانية`;
+    window._adTimerD = setInterval(()=>{
+      t--;
+      document.getElementById('adCounterD').textContent = t > 0 ? `يستمر ${t} ثانية` : '';
+      if(t <= 0) finish();
+    }, 1000);
+  };
+}
+
+function showResults({correct, stats, leaderboard, answers}){
+  const total = stats.reduce((a,s)=>a+s.count,0)||1;
+  const container = document.getElementById('resultsAnswersD');
+  container.innerHTML = answers.map((a,i)=>{
+    const s = stats[i];
+    const pct = Math.round((s.count/total)*100);
+    const isCorrect = i === correct;
+    return `
+      <div class="res-card" style="
+        background:${isCorrect ? COLORS[i]+'33' : COLORS[i]+'15'};
+        border-color:${isCorrect ? COLORS[i] : COLORS[i]+'44'};
+        ${isCorrect ? 'box-shadow:0 0 30px '+COLORS[i]+'44' : ''};
+        animation:fadeIn 0.4s ease ${i*0.1}s both;
+      ">
+        <div class="icon" style="background:${COLORS[i]};${isCorrect?'box-shadow:0 0 16px '+COLORS[i]+'88':''}">
+          ${isCorrect ? '✓' : SHAPES[i]}
+        </div>
+        <div class="res-info">
+          <div class="res-text">${a}</div>
+          <div class="res-votes">${s.count} صوت</div>
+        </div>
+        <div class="res-pct" style="color:${isCorrect?'#22c55e':'#555'}">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+  show('resultsScreen');
+
+  // سكوربورد بعد 3 ثواني
+  setTimeout(()=>{
+    const lbEl = document.getElementById('lbRowsD');
+    lbEl.innerHTML = leaderboard.slice(0,5).map((p,i)=>`
+      <div class="lb-row-big" style="
+        background:${i===0?'rgba(255,215,0,0.12)':i===1?'rgba(192,192,192,0.08)':i===2?'rgba(205,127,50,0.08)':'rgba(255,255,255,0.05)'};
+        border:1px solid ${i===0?'rgba(255,215,0,0.3)':'rgba(255,255,255,0.08)'};
+        animation-delay:${i*0.12}s;
+      ">
+        <span class="lb-medal">${MEDALS[i]||('#'+(i+1))}</span>
+        <span class="lb-name-big">${p.name}</span>
+        <span class="lb-score-big" style="color:${i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#fff'}">${p.score.toLocaleString()}</span>
+      </div>
+    `).join('');
+    show('lbScreen');
+  }, 3000);
+}
+
+function showFinal(final){
+  const top3 = final.slice(0,3);
+  const order = [1,0,2];
+  const heights = ['140px','180px','110px'];
+  const colors = ['rgba(192,192,192,0.15)','rgba(255,215,0,0.2)','rgba(205,127,50,0.15)'];
+  document.getElementById('podiumD').innerHTML = order.map((rank,col)=>{
+    const p = top3[rank]; if(!p) return '';
+    return `<div class="pod-display" style="height:${heights[col]};background:${colors[col]};width:160px;">
+      <span style="font-size:2.5rem">${MEDALS[rank]||''}</span>
+      <span style="font-size:1.2rem;font-weight:700;text-align:center">${p.name}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:1.5rem;color:#ffd700">${p.score.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('finalListD').innerHTML = final.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:1rem;
+      background:${i<3?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)'};
+      border-radius:10px;padding:0.9rem 1.5rem;">
+      <span style="font-size:1.5rem;width:40px;text-align:center">${MEDALS[i]||('#'+(i+1))}</span>
+      <span style="flex:1;font-size:1.2rem;font-weight:700">${p.name}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:1.4rem;color:#ffd700">${p.score.toLocaleString()}</span>
+    </div>
+  `).join('');
+  show('finalScreen');
+}
+</script>
+</body>
+</html>
