@@ -529,33 +529,30 @@ body{
    [LOW-17] .res-card — بطاقة إجابة في شاشة النتائج
    ══════════════════════════════════════════ */
 .res-card{
-  display:flex;align-items:center;gap:1.2rem;
+  display:flex;align-items:center;gap:1.8rem;
   border:2px solid transparent;border-radius:14px;
-  padding:1rem 1.4rem;
+  padding:1.6rem 2rem;
   transition:transform 0.2s;
 }
-
 /* ══════════════════════════════════════════
    [LOW-17 cont.] عناصر داخل .res-card
    ══════════════════════════════════════════ */
 .res-info{flex:1;min-width:0;}
-.res-text{font-size:1.1rem;font-weight:700;color:#fff;word-break:break-word;}
-.res-votes{font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;}
-.res-pct{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#fff;min-width:60px;text-align:left;}
-
+.res-text{font-size:1.8rem;font-weight:700;color:#fff;word-break:break-word;}
+.res-votes{font-size:1.3rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;}
+.res-pct{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:#fff;min-width:80px;text-align:left;}
 /* ══════════════════════════════════════════
    [LOW-16] .lb-row-big — صف في السكوربورد
    ══════════════════════════════════════════ */
 .lb-row-big{
-  display:flex;align-items:center;gap:1.2rem;
-  border-radius:14px;padding:1.2rem 1.8rem;
+  display:flex;align-items:center;gap:1.8rem;
+  border-radius:14px;padding:1.8rem 2.4rem;
   animation:slideInRight 0.4s ease both;
 }
-.lb-medal{font-size:2rem;width:44px;text-align:center;flex-shrink:0;}
-.lb-name-big{flex:1;font-size:1.4rem;font-weight:700;
+.lb-medal{font-size:3.2rem;width:64px;text-align:center;flex-shrink:0;}
+.lb-name-big{flex:1;font-size:2.2rem;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lb-score-big{font-family:'Bebas Neue',sans-serif;font-size:2rem;font-weight:700;flex-shrink:0;}
-
+.lb-score-big{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;font-weight:700;flex-shrink:0;}
 /* ══════════════════════════════════════════
    [LOW-15] .pod-display — منصة التتويج النهائية
    ══════════════════════════════════════════ */
@@ -566,7 +563,6 @@ body{
   border-radius:14px;
   border:1px solid rgba(255,255,255,0.1);
 }
-
 @keyframes particleFloat{
   0%{transform:translateY(0) scale(1);opacity:0.6;}
   50%{opacity:1;}
