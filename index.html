@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IQGC EVENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Bebas+Neue&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --purple:#7c3aed;
+  --purple-light:#a78bfa;
+  --purple-dark:#4c1d95;
+  --cyan:#06b6d4;
+  --pink:#ec4899;
+}
+body{font-family:'Tajawal',sans-serif;min-height:100vh;background:#05000d;color:#fff;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;position:relative;}
+
+/* ── Animated BG ── */
+.bg{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(ellipse 80% 50% at 50% -20%,rgba(124,58,237,0.4) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 40% at 80% 90%,rgba(236,72,153,0.12) 0%,transparent 50%),
+  radial-gradient(ellipse 40% 30% at 10% 70%,rgba(6,182,212,0.1) 0%,transparent 50%),
+  #05000d;}
+
+.grid-bg{position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,58,237,0.05) 1px,transparent 1px);
+  background-size:50px 50px;
+  mask-image:radial-gradient(ellipse at 50% 0%,black 20%,transparent 70%);
+  animation:gridPulse 6s ease-in-out infinite;
+}
+@keyframes gridPulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
+
+/* Floating particles */
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;animation:float linear infinite;}
+@keyframes float{
+  0%{transform:translateY(100vh) scale(0);opacity:0;}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{transform:translateY(-10vh) scale(1);opacity:0;}
+}
+
+/* Scan line effect */
+.scanline{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(124,58,237,0.015) 2px,rgba(124,58,237,0.015) 4px);
+}
+
+.page{position:relative;z-index:2;width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2.5rem 1.5rem 2rem;}
+
+/* ── Hero ── */
+.hero{text-align:center;margin-bottom:2rem;animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+.event-badge{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(236,72,153,0.15));
+  border:1px solid rgba(124,58,237,0.4);
+  color:var(--purple-light);font-size:0.65rem;letter-spacing:0.35em;text-transform:uppercase;
+  padding:0.4rem 1.2rem;border-radius:100px;margin-bottom:1.2rem;
+  animation:badgePulse 3s ease-in-out infinite;
+}
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0.3);}50%{box-shadow:0 0 20px 4px rgba(124,58,237,0.15);}}
+.badge-dot{width:6px;height:6px;background:#34d399;border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.logo-main{
+  font-family:'Bebas Neue',sans-serif;font-size:8rem;line-height:0.85;letter-spacing:0.06em;
+  background:linear-gradient(160deg,#fff 20%,var(--purple-light) 50%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 60px rgba(124,58,237,0.5));
+  position:relative;
+}
+.logo-main::after{
+  content:'IQGC';position:absolute;inset:0;
+  background:linear-gradient(160deg,#fff 20%,var(--purple-light) 50%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:blur(20px);opacity:0.4;z-index:-1;
+}
+.logo-sub{font-family:'Syne',sans-serif;font-size:0.8rem;letter-spacing:0.5em;color:rgba(167,139,250,0.5);text-transform:uppercase;margin-top:0.5rem;}
+
+/* ── Countdown ── */
+.countdown{
+  display:flex;gap:0.6rem;justify-content:center;margin:1.2rem 0 0.5rem;
+  animation:fadeUp 0.8s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+}
+.countdown-item{
+  display:flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(124,58,237,0.2);
+  border-radius:12px;padding:0.6rem 0.8rem;min-width:56px;
+}
+.countdown-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#fff;line-height:1;}
+.countdown-lbl{font-size:0.5rem;letter-spacing:0.3em;color:rgba(167,139,250,0.4);text-transform:uppercase;margin-top:0.15rem;}
+
+/* ── Divider ── */
+.divider{width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,0.5),rgba(6,182,212,0.3),rgba(124,58,237,0.5),transparent);
+  margin:1rem 0 1.8rem;position:relative;}
+.divider::after{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:7px;height:7px;background:var(--purple-light);border-radius:50%;box-shadow:0 0 15px var(--purple),0 0 30px rgba(124,58,237,0.3);}
+
+.section-label{font-size:0.6rem;letter-spacing:0.5em;color:rgba(167,139,250,0.4);text-transform:uppercase;margin-bottom:1rem;align-self:flex-start;}
+
+/* ── Game Cards ── */
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;width:100%;margin-bottom:1rem;}
+
+.game-card{
+  position:relative;overflow:hidden;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:18px;padding:1.4rem 1rem;
+  cursor:pointer;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);
+  text-decoration:none;display:block;
+  animation:fadeUp 0.8s calc(0.1s + var(--i,0) * 0.08s) cubic-bezier(0.16,1,0.3,1) both;
+}
+.game-card::before{content:'';position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(6,182,212,0.08));opacity:0;transition:opacity 0.35s;}
+.game-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(167,139,250,0.4),transparent);opacity:0;transition:opacity 0.35s;}
+.game-card:hover{border-color:rgba(124,58,237,0.6);transform:translateY(-4px) scale(1.02);
+  box-shadow:0 12px 40px rgba(124,58,237,0.25),0 0 0 1px rgba(124,58,237,0.1);}
+.game-card:hover::before,.game-card:hover::after{opacity:1;}
+.game-card:active{transform:translateY(-1px) scale(0.98);}
+
+.game-icon{font-size:2.2rem;margin-bottom:0.6rem;
+  filter:drop-shadow(0 0 8px rgba(124,58,237,0.3));
+  transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);}
+.game-card:hover .game-icon{transform:scale(1.15) rotate(-5deg);}
+.game-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff;margin-bottom:0.2rem;}
+.game-desc{font-size:0.62rem;letter-spacing:0.15em;color:rgba(167,139,250,0.45);text-transform:uppercase;}
+.game-players{display:inline-flex;align-items:center;gap:0.3rem;margin-top:0.5rem;
+  background:rgba(124,58,237,0.12);border-radius:100px;padding:0.2rem 0.6rem;
+  font-size:0.55rem;color:rgba(167,139,250,0.6);letter-spacing:0.1em;}
+.game-players .dot{width:4px;height:4px;background:#34d399;border-radius:50%;}
+
+/* ── Join Button ── */
+.btn-join{
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  width:100%;padding:1rem;
+  background:linear-gradient(135deg,var(--purple),#6d28d9,rgba(236,72,153,0.6));
+  background-size:200% 200%;animation:gradientShift 4s ease infinite,fadeUp 0.8s 0.25s cubic-bezier(0.16,1,0.3,1) both;
+  color:#fff;border:none;border-radius:14px;
+  font-size:0.9rem;letter-spacing:0.2em;font-family:'Tajawal',sans-serif;font-weight:700;
+  cursor:pointer;text-decoration:none;text-align:center;
+  transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+  box-shadow:0 4px 25px rgba(124,58,237,0.4),inset 0 1px 0 rgba(255,255,255,0.1);
+  position:relative;overflow:hidden;
+}
+@keyframes gradientShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.btn-join::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(255,255,255,0.15) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.btn-join:hover{transform:translateY(-3px);
+  box-shadow:0 10px 40px rgba(124,58,237,0.5),inset 0 1px 0 rgba(255,255,255,0.15);}
+.btn-join:hover::before{opacity:1;}
+.btn-join:active{transform:translateY(0);box-shadow:0 4px 15px rgba(124,58,237,0.3);}
+
+/* ── Stats Bar ── */
+.stats-bar{
+  display:flex;gap:0.5rem;width:100%;margin-top:1rem;
+  animation:fadeUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both;
+}
+.stat{flex:1;text-align:center;padding:0.7rem 0.5rem;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;
+  background:linear-gradient(135deg,#fff,var(--purple-light));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-lbl{font-size:0.5rem;letter-spacing:0.3em;color:rgba(167,139,250,0.35);text-transform:uppercase;}
+
+.spacer{flex:1;min-height:1.5rem;}
+
+/* ── Sponsors ── */
+.sponsors{width:100%;margin-top:1.5rem;animation:fadeUp 0.8s 0.35s cubic-bezier(0.16,1,0.3,1) both;}
+.sponsors-label{text-align:center;font-size:0.55rem;letter-spacing:0.5em;color:rgba(167,139,250,0.25);text-transform:uppercase;margin-bottom:0.8rem;}
+.sponsors-row{display:flex;align-items:center;justify-content:center;gap:0.8rem;}
+.sponsor-slot{
+  flex:1;max-width:120px;height:58px;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.15);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;overflow:hidden;position:relative;
+}
+.sponsor-slot::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,0.4),transparent);}
+.sponsor-slot img{max-width:80%;max-height:75%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.45;transition:all 0.3s;}
+.sponsor-slot:hover{border-color:rgba(124,58,237,0.45);box-shadow:0 4px 20px rgba(124,58,237,0.12);transform:translateY(-2px);}
+.sponsor-slot:hover img{opacity:0.85;}
+
+/* ── Footer ── */
+.footer{width:100%;text-align:center;margin-top:1.5rem;padding-bottom:1.5rem;display:flex;flex-direction:column;align-items:center;gap:0.7rem;}
+.ig-btn{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  color:rgba(167,139,250,0.5);text-decoration:none;
+  font-size:0.72rem;letter-spacing:0.15em;
+  padding:0.4rem 0.8rem;border-radius:100px;
+  border:1px solid rgba(124,58,237,0.15);
+  transition:all 0.3s;
+}
+.ig-btn:hover{color:var(--purple-light);border-color:rgba(124,58,237,0.4);
+  box-shadow:0 0 20px rgba(124,58,237,0.15);background:rgba(124,58,237,0.08);}
+.admin-link{font-size:0.6rem;letter-spacing:0.3em;color:rgba(124,58,237,0.2);text-decoration:none;text-transform:uppercase;transition:color 0.2s;}
+.admin-link:hover{color:rgba(167,139,250,0.5);}
+.footer-copy{font-size:0.55rem;letter-spacing:0.35em;color:rgba(255,255,255,0.06);text-transform:uppercase;}
+
+/* ── Mobile-first responsive ── */
+@media(max-width:360px){
+  .logo-main{font-size:6rem;}
+  .countdown-item{min-width:48px;padding:0.5rem 0.6rem;}
+  .countdown-num{font-size:1.3rem;}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+<div class="particles" id="particles"></div>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="event-badge">
+      <span class="badge-dot"></span>
+      مباشر — Game Night
+    </div>
+    <div class="logo-main">IQGC</div>
+    <div class="logo-sub">Iraqi Gamers Connect</div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="countdown" id="countdown">
+    <div class="countdown-item"><div class="countdown-num" id="cd-h">00</div><div class="countdown-lbl">ساعة</div></div>
+    <div class="countdown-item"><div class="countdown-num" id="cd-m">00</div><div class="countdown-lbl">دقيقة</div></div>
+    <div class="countdown-item"><div class="countdown-num" id="cd-s">00</div><div class="countdown-lbl">ثانية</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">اختر اللعبة</div>
+
+  <div class="games-grid">
+    <a href="/host.html" class="game-card" style="--i:0">
+      <div class="game-icon">🎯</div>
+      <div class="game-name">تحدي الأسئلة</div>
+      <div class="game-desc">مسابقة أسئلة</div>
+      <div class="game-players"><span class="dot"></span> جاهز</div>
+    </a>
+    <a href="/dots-host.html" class="game-card" style="--i:1">
+      <div class="game-icon">🔴</div>
+      <div class="game-name">بيت بيوت</div>
+      <div class="game-desc">فريقين • 4 لاعبين</div>
+      <div class="game-players"><span class="dot"></span> جاهز</div>
+    </a>
+  </div>
+
+  <a class="btn-join" href="/play.html">
+    <span>🕹️</span>
+    <span>انضم بكود</span>
+  </a>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num" id="stat-players">0</div>
+      <div class="stat-lbl">لاعب</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2</div>
+      <div class="stat-lbl">ألعاب</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">∞</div>
+      <div class="stat-lbl">حماس</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="sponsors">
+    <div class="sponsors-label">بدعم من</div>
+    <div class="sponsors-row">
+      <div class="sponsor-slot"><img src="/sponsor1.png" alt="Sponsor 1" onerror="this.style.display='none'"/></div>
+      <div class="sponsor-slot"><img src="/sponsor2.png" alt="Sponsor 2" onerror="this.style.display='none'"/></div>
+      <div class="sponsor-slot"><img src="/sponsor3.png" alt="Sponsor 3" onerror="this.style.display='none'"/></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://www.instagram.com/iqgcconnect" target="_blank" class="ig-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+      @iqgcconnect
+    </a>
+    <a href="/admin.html" class="admin-link">⚙ الإدارة</a>
+    <div class="footer-copy">IQGC EVENT © 2026</div>
+  </div>
+
+</div>
+
+<script>
+// ── Floating Particles ──
+(function(){
+  const container=document.getElementById('particles');
+  const colors=['rgba(124,58,237,0.4)','rgba(167,139,250,0.3)','rgba(6,182,212,0.25)','rgba(236,72,153,0.2)'];
+  function spawn(){
+    const p=document.createElement('div');
+    p.classList.add('particle');
+    const size=Math.random()*4+2;
+    p.style.cssText=`
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*8+6}s;
+      animation-delay:${Math.random()*3}s;
+      box-shadow:0 0 ${size*2}px ${colors[Math.floor(Math.random()*colors.length)]};
+    `;
+    container.appendChild(p);
+    p.addEventListener('animationend',()=>p.remove());
+  }
+  setInterval(spawn,400);
+  for(let i=0;i<15;i++) setTimeout(spawn,i*200);
+})();
+
+// ── Countdown (next Friday 8PM Baghdad time) ──
+(function(){
+  function getNextEvent(){
+    const now=new Date();
+    const target=new Date(now);
+    const day=now.getDay();
+    let diff=5-day; // Friday=5
+    if(diff<0||(diff===0&&now.getHours()>=20)) diff+=7;
+    target.setDate(now.getDate()+diff);
+    target.setHours(20,0,0,0);
+    return target;
+  }
+  function update(){
+    const diff=getNextEvent()-new Date();
+    if(diff<=0){
+      document.getElementById('cd-h').textContent='🔥';
+      document.getElementById('cd-m').textContent='الآن';
+      document.getElementById('cd-s').textContent='!';
+      return;
+    }
+    const h=Math.floor(diff/3600000);
+    const m=Math.floor((diff%3600000)/60000);
+    const s=Math.floor((diff%60000)/1000);
+    document.getElementById('cd-h').textContent=String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent=String(m).padStart(2,'0');
+    document.getElementById('cd-s').textContent=String(s).padStart(2,'0');
+  }
+  update();
+  setInterval(update,1000);
+})();
+
+// ── Animated player counter ──
+(function(){
+  const el=document.getElementById('stat-players');
+  const target=47;
+  let current=0;
+  function tick(){
+    if(current<target){
+      current+=Math.ceil((target-current)/8);
+      el.textContent=current;
+      requestAnimationFrame(tick);
+    }else{el.textContent=target;}
+  }
+  setTimeout(tick,800);
+})();
+</script>
+</body>
+</html>
